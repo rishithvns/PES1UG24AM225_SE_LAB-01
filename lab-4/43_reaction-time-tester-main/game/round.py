@@ -8,6 +8,7 @@ class Round:
         self.start_time = pygame.time.get_ticks()
         self.go_time = None
         self.reaction_ms = None
+        self.false_start = False  # True if the player reacted during the grey wait screen
 
     def update(self):
         if self.state == "waiting":
@@ -17,16 +18,23 @@ class Round:
                 self.go_time = now
 
     def register_input(self):
-        # NOTE: this always measures elapsed time since the round
-        # STARTED (self.start_time), not since the screen actually
-        # turned green (self.go_time) - and it never checks self.state
-        # first. Two consequences: (1) a click during the grey
-        # "waiting" phase is timed and recorded exactly like a real
-        # reaction instead of being flagged as a false start, and (2)
-        # even a genuine reaction after "go" is inflated by however
-        # long the wait phase lasted, since the clock never resets
-        # when the screen turns green. See Task 1 in the README.
-        now = pygame.time.get_ticks()
-        self.reaction_ms = now - self.start_time
-        self.state = "result"
-        return self.reaction_ms
+        """Handle a click/Space press.
+
+        Returns the reaction time in ms for a genuine reaction (after "go"),
+        or None if the input was a false start (during the "waiting" phase)
+        or the round is already finished.
+        """
+        if self.state == "waiting":
+            # Reacted before the screen turned green: no time is recorded.
+            self.false_start = True
+            self.state = "result"
+            return None
+
+        if self.state == "go":
+            # Measure from the moment the screen turned green.
+            now = pygame.time.get_ticks()
+            self.reaction_ms = now - self.go_time
+            self.state = "result"
+            return self.reaction_ms
+
+        return None

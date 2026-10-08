@@ -8,6 +8,7 @@ BLACK = (0, 0, 0)
 GRAY = (90, 90, 90)
 GREEN = (40, 180, 90)
 BLUE = (50, 90, 170)
+RED = (190, 60, 60)
 
 class GameEngine:
     def __init__(self, width, height, rounds_total=5, min_wait_ms=1000, max_wait_ms=3000):
@@ -35,7 +36,10 @@ class GameEngine:
         is_space = event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
         if (is_click or is_space) and self.round.state != "result":
             reaction_ms = self.round.register_input()
-            self.reaction_times.append(reaction_ms)
+            # Only genuine reactions (after "go") are recorded; a false start
+            # returns None and is not stored, so that round gets replayed.
+            if reaction_ms is not None:
+                self.reaction_times.append(reaction_ms)
             self.result_shown_at = pygame.time.get_ticks()
 
     def handle_input(self):
@@ -58,6 +62,7 @@ class GameEngine:
         if len(self.reaction_times) >= self.rounds_total:
             self.game_over = True
             return
+        # After a false start nothing was recorded, so this replays the same round number.
         self.round = Round(self.min_wait_ms, self.max_wait_ms)
 
     def average_reaction_ms(self):
@@ -72,6 +77,9 @@ class GameEngine:
         elif self.round.state == "go":
             bg = GREEN
             message = "Click now!"
+        elif self.round.false_start:
+            bg = RED
+            message = "False start!"
         else:
             bg = BLUE
             message = f"{self.round.reaction_ms} ms"
