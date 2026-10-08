@@ -5,6 +5,7 @@ import pygame
 from .round import Round
 
 # Game Engine
+# Generate go, false-start, and session-complete sound effects
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
