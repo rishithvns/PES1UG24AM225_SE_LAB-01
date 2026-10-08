@@ -27,13 +27,28 @@ class GameEngine:
 
         self.font = pygame.font.SysFont("Arial", 30)
         self.big_font = pygame.font.SysFont("Arial", 46)
+        self.small_font = pygame.font.SysFont("Arial", 24)
         self.game_over = False
 
+        # Results screen: ignore input briefly so a stray click right as the
+        # screen appears can't dismiss it, then wait for a key/click to close.
+        self.game_over_at = None
+        self.game_over_input_delay_ms = 500
+        self.quit_requested = False
+
     def handle_event(self, event):
-        if self.game_over:
-            return
         is_click = event.type == pygame.MOUSEBUTTONDOWN
         is_space = event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
+        is_key = event.type == pygame.KEYDOWN
+
+        if self.game_over:
+            # Any key press or click on the results screen closes the game.
+            if is_click or is_key:
+                now = pygame.time.get_ticks()
+                if now - self.game_over_at >= self.game_over_input_delay_ms:
+                    self.quit_requested = True
+            return
+
         if (is_click or is_space) and self.round.state != "result":
             reaction_ms = self.round.register_input()
             # Only genuine reactions (after "go") are recorded; a false start
@@ -61,6 +76,7 @@ class GameEngine:
     def _start_next_round(self):
         if len(self.reaction_times) >= self.rounds_total:
             self.game_over = True
+            self.game_over_at = pygame.time.get_ticks()
             return
         # After a false start nothing was recorded, so this replays the same round number.
         self.round = Round(self.min_wait_ms, self.max_wait_ms)
@@ -70,7 +86,30 @@ class GameEngine:
             return 0
         return round(sum(self.reaction_times) / len(self.reaction_times))
 
+    def _render_results(self, screen):
+        screen.fill(BLUE)
+
+        title = self.big_font.render("Session Complete", True, WHITE)
+        screen.blit(title, title.get_rect(center=(self.width // 2, 45)))
+
+        # One line per recorded reaction time.
+        y = 100
+        for i, ms in enumerate(self.reaction_times, start=1):
+            line = self.font.render(f"Round {i}: {ms} ms", True, WHITE)
+            screen.blit(line, line.get_rect(center=(self.width // 2, y)))
+            y += 32
+
+        avg = self.font.render(f"Average: {self.average_reaction_ms()} ms", True, WHITE)
+        screen.blit(avg, avg.get_rect(center=(self.width // 2, self.height - 90)))
+
+        prompt = self.small_font.render("Press any key or click to exit", True, WHITE)
+        screen.blit(prompt, prompt.get_rect(center=(self.width // 2, self.height - 35)))
+
     def render(self, screen):
+        if self.game_over:
+            self._render_results(screen)
+            return
+
         if self.round.state == "waiting":
             bg = GRAY
             message = "Wait for green..."
@@ -96,9 +135,3 @@ class GameEngine:
 
         avg_text = self.font.render(f"Avg: {self.average_reaction_ms()} ms", True, WHITE)
         screen.blit(avg_text, (self.width - 190, 10))
-
-        if self.game_over and not getattr(self, "_game_over_logged", False):
-            # NOTE: no proper results screen yet - see Task 2 in the README.
-            print("Session complete! Reaction times (ms):", self.reaction_times)
-            print("Average:", self.average_reaction_ms(), "ms")
-            self._game_over_logged = True

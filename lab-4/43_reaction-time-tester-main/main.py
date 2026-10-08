@@ -24,6 +24,10 @@ def main():
                 running = False
             engine.handle_event(event)
 
+        # The results screen asks to close the game on a key press or click.
+        if engine.quit_requested:
+            running = False
+
         engine.handle_input()
         engine.update()
         engine.render(SCREEN)
