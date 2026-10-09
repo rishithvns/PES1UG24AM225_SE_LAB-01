@@ -24,7 +24,11 @@
 **Real-Time Reaction Time Tester – Pygame**
 
 TOTAL TASKS COMPLETED = **4**
+
 **(Input Timing Fix, Game Over Screen, Replay with Difficulty Selection, Sound Feedback)**
+
 ADDED CHAT HISTORY
+
 ADDED VIDEO BEFORE UPDATE
+
 ADDED VIDEO AFTER UPDATE
