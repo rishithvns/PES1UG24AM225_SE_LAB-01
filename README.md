@@ -48,3 +48,8 @@ In this lab I used Pylint, Bandit and Flake8 to find quality, security and style
 
 In this lab I used coverage and pytest to check how much of the warranty claims program was tested. The starter tests only covered 38% of the lines and 32% of the branches. I wrote new test cases for code coverage and then for branch coverage, and both reached 100%. The test files, terminal screenshots and coverage analysis report are added in the lab-6 folder.
 
+**LAB-07**
+
+**Fuzz Testing – Warranty Claims**
+
+In this lab I used Hypothesis and pytest to fuzz test the warranty claims program. I completed the test file with property-based tests, and on the original code 6 of the 9 tests failed because the functions crashed on inputs like None, empty strings, missing separators and non-numeric values. I fixed the functions to validate their input and return None instead of crashing, and all 9 tests passed. The fixed script, test file and lab report with terminal screenshots are added in the lab-7 folder.
